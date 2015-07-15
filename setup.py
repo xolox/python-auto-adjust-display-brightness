@@ -45,7 +45,7 @@ setup(
     install_requires=[
         'coloredlogs >= 0.8',
         'executor >= 1.7.1',
-        'humanfriendly >= 1.16',
+        'humanfriendly >= 1.31',
         'pyephem >= 3.7.5.2',
     ],
     entry_points=dict(console_scripts=[

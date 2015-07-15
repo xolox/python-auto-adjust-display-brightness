@@ -37,7 +37,7 @@ from executor import execute
 from humanfriendly import compact, concatenate
 
 # Semi-standard module versioning.
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
