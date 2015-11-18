@@ -552,6 +552,7 @@ class BacklightBrightnessController(BrightnessController):
                               subdirectory to be used (a string).
         """
         self.sys_directory = kw.pop('sys_directory')
+        self.max_brightness = None
         super(BacklightBrightnessController, self).__init__(**kw)
 
     def get_current_brightness(self):
@@ -563,7 +564,9 @@ class BacklightBrightnessController(BrightnessController):
 
         :returns: An integer number representing the current brightness.
         """
-        with open(os.path.join(self.sys_directory, 'actual_brightness')) as handle:
+        filename = os.path.join(self.sys_directory, 'actual_brightness')
+        logger.debug("Reading %s ..", filename)
+        with open(filename) as handle:
             return int(handle.read())
 
     def get_maximum_brightness(self):
@@ -575,8 +578,12 @@ class BacklightBrightnessController(BrightnessController):
 
         :returns: An integer number representing the maximum brightness.
         """
-        with open(os.path.join(self.sys_directory, 'max_brightness')) as handle:
-            return int(handle.read())
+        if self.max_brightness is None:
+            filename = os.path.join(self.sys_directory, 'max_brightness')
+            logger.debug("Reading %s ..", filename)
+            with open(filename) as handle:
+                self.max_brightness = int(handle.read())
+        return self.max_brightness
 
     def round_brightness(self, raw_brightness):
         """
@@ -600,7 +607,9 @@ class BacklightBrightnessController(BrightnessController):
         """
         logger.debug("Setting brightness of %s to %s (raw value) ..", self.friendly_name, raw_brightness)
         try:
-            with open(os.path.join(self.sys_directory, 'brightness'), 'w') as handle:
+            filename = os.path.join(self.sys_directory, 'brightness')
+            logger.debug("Writing %s ..", filename)
+            with open(filename, 'w') as handle:
                 handle.write(str(int(raw_brightness)))
         except IOError as e:
             if e.errno == errno.EACCES:
