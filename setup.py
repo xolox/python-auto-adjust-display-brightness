@@ -3,7 +3,7 @@
 # Setup script for the `auto-adjust-display-brightness' package.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: July 15, 2015
+# Last Change: November 18, 2015
 # URL: https://github.com/xolox/python-auto-adjust-display-brightness
 
 # Standard library modules.
@@ -45,7 +45,7 @@ setup(
     install_requires=[
         'coloredlogs >= 0.8',
         'executor >= 1.7.1',
-        'humanfriendly >= 1.31',
+        'humanfriendly >= 1.42',
         'pyephem >= 3.7.5.2',
     ],
     entry_points=dict(console_scripts=[

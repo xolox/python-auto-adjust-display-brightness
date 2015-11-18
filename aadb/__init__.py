@@ -1,21 +1,38 @@
 # Automatically adjust the display brightness of Linux displays.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: July 15, 2015
+# Last Change: November 18, 2015
 # URL: https://github.com/xolox/python-auto-adjust-display-brightness
 
 """
 Usage: auto-adjust-display-brightness [OPTIONS]
 
-Automatically adjust the display brightness of Linux displays. Supports back
-light brightness control using the Linux `/sys/class/backlight' interface as
-well as a fall back to software brightness control using `xrandr'.
+Automatically adjust the display brightness of Linux displays.
+
+If the system booted less than five minutes ago the display brightness is
+adjusted in a single step. After five minutes of uptime the brightness is
+adjusted in steps of 10% (unless --force is given).
+
+Supports back light brightness control using the Linux `/sys/class/backlight'
+interface as well as fall back to software brightness control using `xrandr'.
 
 Supported options:
 
-  -v, --verbose  make more noise (increase logging verbosity)
-  -q, --quiet    make less noise (decrease logging verbosity)
-  -h, --help     show this message and exit
+  -f, --force
+
+    Adjust the display brightness in one step regardless of uptime.
+
+  -v, --verbose
+
+    Make more noise (increase logging verbosity).
+
+  -q, --quiet
+
+    Make less noise (decrease logging verbosity).
+
+  -h, --help
+
+    Show this message and exit.
 """
 
 # Standard library modules.
@@ -35,9 +52,10 @@ import coloredlogs
 import ephem
 from executor import execute
 from humanfriendly import compact, concatenate
+from humanfriendly.terminal import usage, warning
 
 # Semi-standard module versioning.
-__version__ = '1.0.1'
+__version__ = '1.1'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -55,36 +73,42 @@ def main():
     # Initialize logging to the terminal.
     coloredlogs.install()
     # Parse the command line arguments.
+    step_brightness = None
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'vqh', [
-            'verbose', 'quiet', 'help'
+        options, arguments = getopt.getopt(sys.argv[1:], 'fvqh', [
+            'force', 'verbose', 'quiet', 'help'
         ])
         for option, value in options:
-            if option in ('-v', '--verbose'):
+            if option in ('-f', '--force'):
+                step_brightness = False
+            elif option in ('-v', '--verbose'):
                 coloredlogs.increase_verbosity()
             elif option in ('-q', '--quiet'):
                 coloredlogs.decrease_verbosity()
             elif option in ('-h', '--help'):
-                usage()
+                usage(__doc__)
                 return
             else:
                 assert False, "Unhandled option!"
     except Exception as e:
-        sys.stderr.write("Failed to parse command line arguments! (%s)\n" % e)
+        warning("Failed to parse command line arguments! (%s)", e)
         sys.exit(1)
     # Load the configuration file(s).
     try:
         config = load_config()
     except ConfigurationError as e:
-        sys.stderr.write("Error: %s\n" % e)
+        warning("%s", e)
         sys.exit(1)
     # Determine whether to change the brightness at once or gradually.
-    if find_system_uptime() < 60:
-        logger.info("Changing brightness at once (system has just booted).")
-        step_brightness = False
+    if step_brightness is None:
+        if find_system_uptime() < 60 * 5:
+            logger.info("Changing brightness at once (system has just booted).")
+            step_brightness = False
+        else:
+            logger.info("Changing brightness gradually (system has been running for a while).")
+            step_brightness = True
     else:
-        logger.info("Changing brightness gradually (system has been running for a while).")
-        step_brightness = True
+        logger.info("Changing brightness at once (-f or --force was given).")
     # Change the brightness of the configured display(s).
     if is_it_dark_outside(latitude=float(config['location']['latitude']),
                           longitude=float(config['location']['longitude']),
@@ -94,11 +118,6 @@ def main():
     else:
         for controller in config['controllers']:
             controller.increase_brightness(10 if step_brightness else 100)
-
-
-def usage():
-    """Print a friendly usage message to the terminal."""
-    print(__doc__.strip())
 
 
 def load_config():
