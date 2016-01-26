@@ -1,7 +1,7 @@
 # Automatically adjust the display brightness of Linux displays.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: November 18, 2015
+# Last Change: January 26, 2016
 # URL: https://github.com/xolox/python-auto-adjust-display-brightness
 
 """
@@ -55,7 +55,7 @@ from humanfriendly import compact, concatenate
 from humanfriendly.terminal import usage, warning
 
 # Semi-standard module versioning.
-__version__ = '1.1'
+__version__ = '1.2'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -110,14 +110,20 @@ def main():
     else:
         logger.info("Changing brightness at once (-f or --force was given).")
     # Change the brightness of the configured display(s).
-    if is_it_dark_outside(latitude=float(config['location']['latitude']),
-                          longitude=float(config['location']['longitude']),
-                          elevation=float(config['location']['elevation'])):
-        for controller in config['controllers']:
-            controller.decrease_brightness(10 if step_brightness else 100)
-    else:
-        for controller in config['controllers']:
-            controller.increase_brightness(10 if step_brightness else 100)
+    dark_outside = is_it_dark_outside(latitude=float(config['location']['latitude']),
+                                      longitude=float(config['location']['longitude']),
+                                      elevation=float(config['location']['elevation']))
+    method = 'decrease_brightness' if dark_outside else 'increase_brightness'
+    num_success, num_failed = 0, 0
+    for controller in config['controllers']:
+        try:
+            getattr(controller, method)(10 if step_brightness else 100)
+            num_success += 1
+        except Exception as e:
+            logger.warning("Failed to change brightness of %s! (%s)", controller, e)
+            num_failed += 1
+    if num_failed > 0 and num_success == 0:
+        sys.exit(1)
 
 
 def load_config():
