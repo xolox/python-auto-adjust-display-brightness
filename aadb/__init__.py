@@ -55,7 +55,7 @@ from humanfriendly import compact, concatenate
 from humanfriendly.terminal import usage, warning
 
 # Semi-standard module versioning.
-__version__ = '1.2'
+__version__ = '1.3'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -338,8 +338,7 @@ class BrightnessController(object):
         # different brightness value (there's no point in calling xrandr or
         # invoking kernel mechanisms when nothing will change).
         if new_brightness != current_brightness:
-            logger.debug("Increasing brightness of %s by %i%% (to %i%%) ..",
-                         self.friendly_name, step_size, new_percentage)
+            self.report_brightness_change(old_percentage, new_percentage)
             self.change_brightness(new_brightness)
             return True
         else:
@@ -367,13 +366,25 @@ class BrightnessController(object):
         # different brightness value (there's no point in calling xrandr or
         # invoking kernel mechanisms when nothing will change).
         if new_brightness != current_brightness:
-            logger.info("Decreasing brightness of %s by %i%% (to %i%%) ..",
-                        self.friendly_name, step_size, new_percentage)
+            self.report_brightness_change(old_percentage, new_percentage)
             self.change_brightness(new_brightness)
             return True
         else:
             logger.info("Brightness of %s is already low enough.", self.friendly_name)
             return False
+
+    def report_brightness_change(self, old_percentage, new_percentage):
+        """
+        Report a change in brightness to the user via the terminal.
+
+        :param old_percentage: The old brightness percentage (a number).
+        :param new_percentage: The new brightness percentage (a number).
+        """
+        logger.info("%s brightness of %s by %i%% (to %i%%) ..",
+                    "Increasing" if new_percentage > old_percentage else "Decreasing",
+                    self.friendly_name,
+                    abs(new_percentage - old_percentage),
+                    new_percentage)
 
     def brightness_to_percentage(self, brightness):
         """

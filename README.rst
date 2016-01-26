@@ -125,7 +125,7 @@ Here's what I'm currently using::
    HOME=/home/peter
    VIRTUAL_ENV=/home/peter/.virtualenvs/auto-adjust-display-brightness
 
-   @reboot root $VIRTUAL_ENV/bin/auto-adjust-display-brightness 1>/dev/null 2>&1
+   @reboot root $VIRTUAL_ENV/bin/auto-adjust-display-brightness --force 1>/dev/null 2>&1
    * * * * * root $VIRTUAL_ENV/bin/auto-adjust-display-brightness 1>/dev/null 2>&1
 
 Some notes about this crontab:
@@ -161,7 +161,7 @@ License
 
 This software is licensed under the `MIT license`_.
 
-© 2015 Peter Odding.
+© 2016 Peter Odding.
 
 .. External references:
 .. _/sys/class/backlight: https://www.kernel.org/doc/Documentation/ABI/stable/sysfs-class-backlight
