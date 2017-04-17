@@ -1,7 +1,7 @@
 # Automatically adjust the display brightness of Linux displays.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: January 26, 2016
+# Last Change: April 17, 2017
 # URL: https://github.com/xolox/python-auto-adjust-display-brightness
 
 """
@@ -55,7 +55,7 @@ from humanfriendly import compact, concatenate
 from humanfriendly.terminal import usage, warning
 
 # Semi-standard module versioning.
-__version__ = '1.3'
+__version__ = '1.3.1'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -512,11 +512,10 @@ class SoftwareBrightnessController(BrightnessController):
         for line in listing.splitlines():
             # Check for a line that introduces a new output, something like:
             # eDP1 connected 1440x900+0+0 (0x49) normal (...) 30mm x 179mm
-            output_match = re.match(r'^(\w+)\s+connected\s+', line, re.IGNORECASE)
+            output_match = re.match(r'^(\S+)\s+connected\s+', line, re.IGNORECASE)
             if output_match:
                 current_output = output_match.group(1)
-                continue
-            if current_output and current_output.lower() == self.output_name.lower():
+            elif current_output and current_output.lower() == self.output_name.lower():
                 # Check for a line with the current brightness of an output,
                 # something like `Brightness: 0.50' (with a <Tab> in front).
                 brightness_match = re.match(r'^\s*Brightness:\s+(\d+(\.\d+)?)', line, re.IGNORECASE)
